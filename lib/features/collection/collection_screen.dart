@@ -207,33 +207,6 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen>
 
     return Column(
       children: [
-        // Back to Folders Banner with iOS Chevron Icon
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.cardElevated,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.cardBorder),
-          ),
-          child: Row(
-            children: [
-              Icon(_getFolderIcon(folderKey), color: _getFolderColor(folderKey), size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  "${items.length} Files in Folder",
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _closeFolder,
-                icon: const Icon(CupertinoIcons.folder_fill, size: 16),
-                label: const Text("Folders", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        ),
 
         // Filter Chips if active
         if (filterState.genre != null || filterState.year != null)

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
@@ -141,7 +142,7 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                         CircleAvatar(
                           backgroundColor: Colors.black45,
                           child: IconButton(
-                            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                            icon: const Icon(CupertinoIcons.chevron_back, color: Colors.white, size: 22),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ),
@@ -274,8 +275,8 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                 children: [
                   Expanded(
                     child: _StatusActionButton(
-                      label: currentStatus == 'wishlist' ? 'In Wishlist' : '+ Wishlist',
-                      icon: Icons.bookmark_added_rounded,
+                      label: currentStatus == 'wishlist' ? 'In Wishlist' : 'Wishlist',
+                      icon: CupertinoIcons.bookmark_fill,
                       isActive: currentStatus == 'wishlist',
                       activeColor: AppColors.wishlistChip,
                       onPressed: () {
@@ -286,8 +287,8 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _StatusActionButton(
-                      label: currentStatus == 'watching' ? 'Watching' : '▶ Start',
-                      icon: Icons.play_arrow_rounded,
+                      label: currentStatus == 'watching' ? 'Watching' : 'Start',
+                      icon: CupertinoIcons.play_fill,
                       isActive: currentStatus == 'watching',
                       activeColor: AppColors.watchingChip,
                       onPressed: () {
@@ -299,8 +300,8 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _StatusActionButton(
-                      label: currentStatus == 'watched' ? 'Watched' : '✓ Watched',
-                      icon: Icons.check_circle_rounded,
+                      label: currentStatus == 'watched' ? 'Watched' : 'Watched',
+                      icon: CupertinoIcons.check_mark_circled_solid,
                       isActive: currentStatus == 'watched',
                       activeColor: AppColors.watchedChip,
                       onPressed: () {
@@ -526,28 +527,71 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
     if (_watchProviders == null) return const SizedBox.shrink();
 
     final flatrate = (_watchProviders!['flatrate'] as List?) ?? [];
-    final rent = (_watchProviders!['rent'] as List?) ?? [];
-    final buy = (_watchProviders!['buy'] as List?) ?? [];
 
-    if (flatrate.isEmpty && rent.isEmpty && buy.isEmpty) {
+    if (flatrate.isEmpty) {
+      final releaseDateStr = _media.releaseDate;
+
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.card,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: AppColors.cardBorder),
           ),
-          child: const Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.tv_off_rounded, color: AppColors.textMuted, size: 20),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  "Not currently listed on major streaming platforms in your region",
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                ),
+              const Row(
+                children: [
+                  Icon(CupertinoIcons.tv, color: AppColors.primaryAccent, size: 20),
+                  SizedBox(width: 10),
+                  Text(
+                    "OTT Release Status (India)",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.amberRating.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(CupertinoIcons.time, color: AppColors.amberRating, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Not Released on Indian OTT Platforms Yet",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          releaseDateStr != null && releaseDateStr.isNotEmpty
+                              ? "Theatrical Release: $releaseDateStr • Expected OTT premiere: ~45–90 days post premiere"
+                              : "Expected OTT release on CineVault: ~45–90 days following theatrical release",
+                          style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -576,10 +620,10 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
           children: [
             const Row(
               children: [
-                Icon(Icons.tv_rounded, color: AppColors.primaryAccent, size: 22),
+                Icon(CupertinoIcons.tv, color: AppColors.primaryAccent, size: 22),
                 SizedBox(width: 10),
                 Text(
-                  "Where to Watch",
+                  "Streaming on OTT (India)",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -589,47 +633,11 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
               ],
             ),
             const SizedBox(height: 14),
-
-            if (flatrate.isNotEmpty) ...[
-              const Text(
-                "Stream / Subscription",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 10,
-                runSpacing: 8,
-                children: flatrate.map((provider) => _buildProviderBadge(provider)).toList(),
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            if (rent.isNotEmpty) ...[
-              const Text(
-                "Rent",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 10,
-                runSpacing: 8,
-                children: rent.map((provider) => _buildProviderBadge(provider)).toList(),
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            if (buy.isNotEmpty) ...[
-              const Text(
-                "Buy",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 10,
-                runSpacing: 8,
-                children: buy.map((provider) => _buildProviderBadge(provider)).toList(),
-              ),
-            ],
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: flatrate.map((provider) => _buildProviderBadge(provider)).toList(),
+            ),
           ],
         ),
       ),

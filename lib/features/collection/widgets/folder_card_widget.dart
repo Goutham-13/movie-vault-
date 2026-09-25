@@ -116,51 +116,98 @@ class _FolderCardWidgetState extends State<FolderCardWidget> with SingleTickerPr
                 ),
               ),
 
-              // 3. Document File Sheets Peeking out 3D from inside the folder (ONLY IF NOT EMPTY)
+              // 3. Document File Sheets Peeking out 3D from inside the folder (Based on count: 1, 2, or 3+)
               if (widget.items.isNotEmpty) ...[
-                // Sheet 1: Left Paper File (tilted left)
-                Positioned(
-                  top: 14,
-                  left: 20,
-                  child: Transform.rotate(
-                    angle: -0.16,
-                    child: _buildFilePaperCard(
-                      media: mediaList.isNotEmpty ? mediaList[0] : null,
-                      width: 44,
-                      height: 60,
-                    ),
-                  ),
-                ),
-                // Sheet 2: Right Paper File (tilted right)
-                Positioned(
-                  top: 14,
-                  right: 20,
-                  child: Transform.rotate(
-                    angle: 0.16,
-                    child: _buildFilePaperCard(
-                      media: mediaList.length > 1 ? mediaList[1] : (mediaList.isNotEmpty ? mediaList[0] : null),
-                      width: 44,
-                      height: 60,
-                    ),
-                  ),
-                ),
-                // Sheet 3: Center Paper File (upright, highest)
-                Positioned(
-                  top: 6,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Transform.rotate(
-                      angle: -0.02,
-                      child: _buildFilePaperCard(
-                        media: mediaList.length > 2 ? mediaList[2] : (mediaList.isNotEmpty ? mediaList[0] : null),
-                        width: 48,
-                        height: 66,
-                        isPrimary: true,
+                // Case A: 1 item -> 1 single wide card in center
+                if (mediaList.length == 1)
+                  Positioned(
+                    top: 6,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Transform.rotate(
+                        angle: 0.0,
+                        child: _buildFilePaperCard(
+                          media: mediaList[0],
+                          width: 62,
+                          height: 76,
+                          isPrimary: true,
+                        ),
                       ),
                     ),
                   ),
-                ),
+
+                // Case B: 2 items -> 2 wide cards (tilted left and right)
+                if (mediaList.length == 2) ...[
+                  Positioned(
+                    top: 10,
+                    left: 18,
+                    child: Transform.rotate(
+                      angle: -0.12,
+                      child: _buildFilePaperCard(
+                        media: mediaList[0],
+                        width: 56,
+                        height: 72,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 18,
+                    child: Transform.rotate(
+                      angle: 0.12,
+                      child: _buildFilePaperCard(
+                        media: mediaList[1],
+                        width: 56,
+                        height: 72,
+                      ),
+                    ),
+                  ),
+                ],
+
+                // Case C: 3 or more items -> 3 wide cards
+                if (mediaList.length >= 3) ...[
+                  Positioned(
+                    top: 12,
+                    left: 14,
+                    child: Transform.rotate(
+                      angle: -0.16,
+                      child: _buildFilePaperCard(
+                        media: mediaList[0],
+                        width: 54,
+                        height: 70,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 12,
+                    right: 14,
+                    child: Transform.rotate(
+                      angle: 0.16,
+                      child: _buildFilePaperCard(
+                        media: mediaList[1],
+                        width: 54,
+                        height: 70,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 6,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Transform.rotate(
+                        angle: -0.02,
+                        child: _buildFilePaperCard(
+                          media: mediaList[2],
+                          width: 60,
+                          height: 76,
+                          isPrimary: true,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
 
               // 4. Front Folder Pocket Sleeve with Title Label & Item Count Badge
