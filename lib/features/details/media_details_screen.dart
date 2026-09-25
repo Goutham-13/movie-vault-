@@ -25,6 +25,8 @@ class MediaDetailsScreen extends ConsumerStatefulWidget {
 class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
   late MediaItem _media;
   List<MediaItem> _recommendations = [];
+  Map<String, dynamic>? _watchProviders;
+  List<Map<String, String>> _credits = [];
   bool _isLoadingRecommendations = true;
 
   @override
@@ -40,10 +42,14 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
       if (_media.source == 'tmdb' && _media.tmdbId != null) {
         final fullDetails = await tmdbRepo.getDetails(_media.tmdbId!, _media.mediaType);
         final recs = await tmdbRepo.getRecommendations(_media.tmdbId!, _media.mediaType);
+        final providers = await tmdbRepo.getWatchProviders(_media.tmdbId!, _media.mediaType);
+        final cast = await tmdbRepo.getCredits(_media.tmdbId!, _media.mediaType);
         if (mounted) {
           setState(() {
             _media = fullDetails;
             _recommendations = recs;
+            _watchProviders = providers;
+            _credits = cast;
             _isLoadingRecommendations = false;
           });
         }
@@ -470,6 +476,12 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
               ),
             ],
 
+            // Where to Watch / Streaming Platforms Section
+            _buildWatchProvidersSection(),
+
+            // Top Cast & Crew Section
+            _buildCastSection(),
+
             // Reminder Trigger Button
             const SizedBox(height: 24),
             Padding(
@@ -506,6 +518,232 @@ class _MediaDetailsScreenState extends ConsumerState<MediaDetailsScreen> {
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildWatchProvidersSection() {
+    if (_watchProviders == null) return const SizedBox.shrink();
+
+    final flatrate = (_watchProviders!['flatrate'] as List?) ?? [];
+    final rent = (_watchProviders!['rent'] as List?) ?? [];
+    final buy = (_watchProviders!['buy'] as List?) ?? [];
+
+    if (flatrate.isEmpty && rent.isEmpty && buy.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.cardBorder),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.tv_off_rounded, color: AppColors.textMuted, size: 20),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "Not currently listed on major streaming platforms in your region",
+                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.cardBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.tv_rounded, color: AppColors.primaryAccent, size: 22),
+                SizedBox(width: 10),
+                Text(
+                  "Where to Watch",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            if (flatrate.isNotEmpty) ...[
+              const Text(
+                "Stream / Subscription",
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 10,
+                runSpacing: 8,
+                children: flatrate.map((provider) => _buildProviderBadge(provider)).toList(),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            if (rent.isNotEmpty) ...[
+              const Text(
+                "Rent",
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 10,
+                runSpacing: 8,
+                children: rent.map((provider) => _buildProviderBadge(provider)).toList(),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            if (buy.isNotEmpty) ...[
+              const Text(
+                "Buy",
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 10,
+                runSpacing: 8,
+                children: buy.map((provider) => _buildProviderBadge(provider)).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProviderBadge(dynamic provider) {
+    final name = (provider['provider_name'] ?? '').toString();
+    final logoPath = (provider['logo_path'] ?? '').toString();
+    final logoUrl = ApiConstants.getPosterUrl(logoPath, quality: 'w185');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.cardElevated,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.glassBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (logoUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: CachedNetworkImage(
+                imageUrl: logoUrl,
+                width: 22,
+                height: 22,
+                fit: BoxFit.cover,
+                errorWidget: (context, url, error) => const Icon(Icons.play_circle_fill_rounded, size: 20, color: AppColors.primaryAccent),
+              ),
+            )
+          else
+            const Icon(Icons.play_circle_fill_rounded, size: 20, color: AppColors.primaryAccent),
+          const SizedBox(width: 8),
+          Text(
+            name,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCastSection() {
+    if (_credits.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.0),
+            child: Text(
+              "Top Cast & Crew",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 105,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _credits.length,
+              itemBuilder: (context, index) {
+                final c = _credits[index];
+                final name = c['name'] ?? '';
+                final character = c['character'] ?? '';
+                final profilePath = c['profilePath'] ?? '';
+                final profileUrl = ApiConstants.getPosterUrl(profilePath, quality: 'w185');
+
+                return Container(
+                  width: 75,
+                  margin: const EdgeInsets.only(right: 14),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 26,
+                        backgroundColor: AppColors.cardElevated,
+                        backgroundImage: profileUrl.isNotEmpty ? CachedNetworkImageProvider(profileUrl) : null,
+                        child: profileUrl.isEmpty ? const Icon(Icons.person_rounded, color: AppColors.textMuted) : null,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      Text(
+                        character,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 9, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

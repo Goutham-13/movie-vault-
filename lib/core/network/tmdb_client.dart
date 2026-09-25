@@ -134,4 +134,33 @@ class TmdbClient {
     final results = res['results'] as List? ?? [];
     return results.map((item) => MediaItem.fromTmdbJson(item, mediaType)).toList();
   }
+
+  // Get Watch Providers / Streaming Platforms
+  Future<Map<String, dynamic>> getWatchProviders(int tmdbId, String mediaType) async {
+    try {
+      final res = await _get('/$mediaType/$tmdbId/watch/providers');
+      final results = res['results'] as Map<String, dynamic>? ?? {};
+      if (results.containsKey('IN')) return results['IN'] as Map<String, dynamic>;
+      if (results.containsKey('US')) return results['US'] as Map<String, dynamic>;
+      if (results.isNotEmpty) return results.values.first as Map<String, dynamic>;
+      return {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  // Get Credits (Cast)
+  Future<List<Map<String, String>>> getCredits(int tmdbId, String mediaType) async {
+    try {
+      final res = await _get('/$mediaType/$tmdbId/credits');
+      final cast = res['cast'] as List? ?? [];
+      return cast.take(12).map((c) => {
+        'name': (c['name'] ?? '').toString(),
+        'character': (c['character'] ?? c['job'] ?? '').toString(),
+        'profilePath': (c['profile_path'] ?? '').toString(),
+      }).toList();
+    } catch (_) {
+      return [];
+    }
+  }
 }

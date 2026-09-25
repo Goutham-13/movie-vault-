@@ -36,6 +36,8 @@ class HomeScreen extends ConsumerWidget {
     final remindersAsync = ref.watch(remindersProvider);
     final newReleasesAsync = ref.watch(newReleasesProvider);
     final trendingAsync = ref.watch(trendingMediaProvider);
+    final popularMoviesAsync = ref.watch(popularMoviesProvider);
+    final popularTvAsync = ref.watch(popularTvProvider);
 
     final hasPersonalContent = continueWatchingItems.isNotEmpty ||
         wishlistItems.isNotEmpty ||
@@ -48,6 +50,8 @@ class HomeScreen extends ConsumerWidget {
           onRefresh: () async {
             ref.invalidate(trendingMediaProvider);
             ref.invalidate(newReleasesProvider);
+            ref.invalidate(popularMoviesProvider);
+            ref.invalidate(popularTvProvider);
             await ref.read(collectionProvider.notifier).loadCollection();
           },
           child: SingleChildScrollView(
@@ -167,7 +171,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // 1. Top Auto-Moving Continuous Hero Carousel (No category tabs, no start watching button)
+                // 1. Top Auto-Moving Continuous Hero Carousel: New Released Movies
                 newReleasesAsync.when(
                   data: (items) => HeroReleaseCarousel(
                     items: items,
@@ -185,7 +189,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // 2. Continue Watching Carousel
+                // 2. Continue Watching Carousel (partially watched by user)
                 if (continueWatchingItems.isNotEmpty) ...[
                   ContinueWatchingCarousel(
                     items: continueWatchingItems,
@@ -218,21 +222,11 @@ class HomeScreen extends ConsumerWidget {
                   error: (_, __) => const SizedBox.shrink(),
                 ),
 
-                // 4. Recently Watched Carousel
-                if (watchedItems.isNotEmpty) ...[
-                  HorizontalMediaList(
-                    title: "Recently Watched",
-                    subtitle: "Your personal history",
-                    collectionItems: watchedItems,
-                    onMediaTap: (media) => _openMediaDetails(context, media),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // 5. Trending Worldwide Carousel
+                // 4. Trending Movies & TV Shows
                 trendingAsync.when(
                   data: (items) => HorizontalMediaList(
                     title: "Trending Movies & TV",
+                    subtitle: "What everyone is watching this week",
                     items: items,
                     onMediaTap: (media) => _openMediaDetails(context, media),
                   ),
@@ -245,7 +239,50 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // 6. Wishlist Carousel
+                // 5. Popular Movies
+                popularMoviesAsync.when(
+                  data: (items) => HorizontalMediaList(
+                    title: "Popular Movies",
+                    items: items,
+                    onMediaTap: (media) => _openMediaDetails(context, media),
+                  ),
+                  loading: () => const HorizontalMediaList(
+                    title: "Popular Movies",
+                    isLoading: true,
+                    onMediaTap: _noop,
+                  ),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+                const SizedBox(height: 24),
+
+                // 6. Popular TV Shows
+                popularTvAsync.when(
+                  data: (items) => HorizontalMediaList(
+                    title: "Popular TV Shows",
+                    items: items,
+                    onMediaTap: (media) => _openMediaDetails(context, media),
+                  ),
+                  loading: () => const HorizontalMediaList(
+                    title: "Popular TV Shows",
+                    isLoading: true,
+                    onMediaTap: _noop,
+                  ),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+                const SizedBox(height: 24),
+
+                // 7. Recently Watched Carousel
+                if (watchedItems.isNotEmpty) ...[
+                  HorizontalMediaList(
+                    title: "Recently Watched",
+                    subtitle: "Your personal history",
+                    collectionItems: watchedItems,
+                    onMediaTap: (media) => _openMediaDetails(context, media),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // 8. Wishlist Carousel
                 if (wishlistItems.isNotEmpty) ...[
                   HorizontalMediaList(
                     title: "From Your Wishlist",

@@ -85,7 +85,7 @@ class HorizontalMediaList extends StatelessWidget {
         const SizedBox(height: 14),
 
         SizedBox(
-          height: 245,
+          height: 260,
           child: isLoading
               ? ListView.builder(
                   scrollDirection: Axis.horizontal,

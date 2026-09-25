@@ -234,6 +234,14 @@ class TmdbRepository {
     }
   }
 
+  Future<Map<String, dynamic>> getWatchProviders(int tmdbId, String mediaType) async {
+    return _tmdbClient.getWatchProviders(tmdbId, mediaType);
+  }
+
+  Future<List<Map<String, String>>> getCredits(int tmdbId, String mediaType) async {
+    return _tmdbClient.getCredits(tmdbId, mediaType);
+  }
+
   void _cacheMediaItems(List<MediaItem> items) {
     for (final item in items) {
       _isarService.saveMediaItem(item);
